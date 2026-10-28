@@ -674,7 +674,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 :root{
   --space:#070D18; --night:#0D1729; --deck:#142039; --deck-2:#1A2946; --rule:#263A5C;
   --ink:#F1E9D8; --ink-2:#C8BFAE; --ink-3:#8E8A84;
-  --sun:#F2B33D; --dust:#D08A42; --signal:#6CC3C0; --alarm:#EC6A5E; --ok:#8FCB8C; --detect:#62AEEF;
+  --sun:#F2B33D; --dust:#F2867D; --signal:#6CC3C0; --alarm:#B98AF0; --ok:#8FCB8C; --detect:#62AEEF;
   --f:'Readex Pro',system-ui,-apple-system,'Segoe UI',sans-serif;
   color-scheme:dark;
 }
@@ -771,7 +771,7 @@ h3{font-size:17px;font-weight:600;margin:0 0 4px}
 .layers input{accent-color:var(--sun);width:15px;height:15px}
 .sw{display:inline-block;width:14px;height:14px;border-radius:3px;flex:none}
 .legend{position:absolute;left:14px;bottom:14px;z-index:600;background:rgba(13,23,41,.93);border:1px solid var(--rule);border-radius:12px;padding:8px 12px;font-size:12.5px;color:var(--ink-2)}
-.ramp{display:inline-block;width:80px;height:9px;border-radius:3px;background:linear-gradient(90deg,#3B6F86,#9C9662,var(--dust),#B9502C);vertical-align:middle;margin:0 8px}
+.ramp{display:inline-block;width:80px;height:9px;border-radius:3px;background:linear-gradient(90deg,#F7B7B1,#F2867D,#E0473B);vertical-align:middle;margin:0 8px}
 .detail .status{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:3px 10px;border-radius:999px;margin:6px 0 10px}
 .detail .sentence{font-size:15px;color:var(--ink-2);margin:0 0 14px}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin:12px 0}
@@ -942,11 +942,11 @@ footer dt{color:var(--ink-2)} footer dd{margin:0}
         <div class="layers" role="group" aria-label="Map layers">
           <label><input type="checkbox" id="lyImg" checked><span class="sw" style="background:#6b7a55"></span>Satellite imagery</label>
           <label><input type="checkbox" id="lyDet" checked><span class="sw" style="background:var(--detect)"></span>Detected solar panels</label>
-          <label><input type="checkbox" id="lyDust"><span class="sw" style="background:var(--dust)"></span>Sections needing cleaning</label>
+          <label><input type="checkbox" id="lyDust" checked><span class="sw" style="background:var(--dust)"></span>Sections needing cleaning</label>
           <label><input type="checkbox" id="lyRoof" checked><span class="sw" style="border:2px solid var(--detect)"></span>Rooftop districts</label>
           <label><input type="checkbox" id="lyTrack" checked><span class="sw" style="background:var(--sun)"></span>Satellite and ground stations</label>
         </div>
-        <div class="legend">Clean<span class="ramp"></span>Needs cleaning</div>
+        <div class="legend"><span class="sw" style="background:var(--detect);vertical-align:middle;margin-right:6px"></span>Clean<span style="margin:0 10px;color:var(--rule)">|</span>Dust: light<span class="ramp"></span>heavy</div>
       </div>
       <div class="panel detail" id="detail">
         <div class="pills" id="detailPills"></div>
@@ -958,6 +958,7 @@ footer dt{color:var(--ink-2)} footer dd{margin:0}
           <div><b id="dCap">--</b><span>Estimated capacity</span></div>
           <div><b id="dToday">--</b><span>Expected today</span></div>
           <div><b id="dLoss">--</b><span>Lost to dust today</span></div>
+          <div><b id="dPct">--</b><span id="dPctL">Sections needing cleaning</span></div>
         </div>
         <p class="muted" id="dMeta"></p>
       </div>
@@ -1758,7 +1759,7 @@ map.createPane('base'); map.getPane('base').style.zIndex=150;
 L.geoJSON(window.REGION,{pane:'base',style:f=>({color:f.properties.name==='United Arab Emirates'?'#7A7262':'#2A3F60',weight:f.properties.name==='United Arab Emirates'?1.4:.8,fillColor:f.properties.name==='United Arab Emirates'?'#1D3050':'#152640',fillOpacity:1}),interactive:false}).addTo(map);
 const imagery=L.tileLayer(ESRI,{attribution:ESRI_ATTR,maxZoom:18}); let tileErr=0;
 imagery.on('tileerror',()=>{ if(++tileErr>6&&imageryOk){ imageryOk=false; map.removeLayer(imagery); $('lyImg').checked=false; $('lyImg').disabled=true; } }); imagery.addTo(map);
-const detLayer=L.layerGroup().addTo(map), dustLayer=L.layerGroup(), roofLayer=L.layerGroup().addTo(map), trackGroup=L.layerGroup().addTo(map);
+const detLayer=L.layerGroup().addTo(map), dustLayer=L.layerGroup().addTo(map), roofLayer=L.layerGroup().addTo(map), trackGroup=L.layerGroup().addTo(map);
 function farmCellBounds(s){ const dLat=s.box[1]/111.32, dLon=s.box[0]/(111.32*Math.cos(s.lat*D2R)), lat0=s.lat+dLat/2, lon0=s.lon-dLon/2;
   return k=>{const r=Math.floor(k/GRID),c=k%GRID; return [[lat0-(r+1)*dLat/GRID,lon0+c*dLon/GRID],[lat0-r*dLat/GRID,lon0+(c+1)*dLon/GRID]];}; }
 function farmBounds(s){ const dLat=s.box[1]/111.32, dLon=s.box[0]/(111.32*Math.cos(s.lat*D2R)); return [[s.lat-dLat/2,s.lon-dLon/2],[s.lat+dLat/2,s.lon+dLon/2]]; }
@@ -1792,11 +1793,11 @@ function drawTracks(now){ const m=Math.floor(now.getTime()/60000); if(m===lastTr
   splitLon(past.map(p=>[p.lat,p.lon])).forEach(seg=>L.polyline(seg,{color:'#F2B33D',weight:1.5,opacity:.35}).addTo(trackPast));
   splitLon(next.map(p=>[p.lat,p.lon])).forEach(seg=>L.polyline(seg,{color:'#F2B33D',weight:2,opacity:.9}).addTo(trackNext));
   if(globe) globe.update({orbit:next,trail:past}); }
-function dustColor(sev){ const st=[[0,[59,111,134]],[30,[156,150,98]],[60,[208,138,66]],[100,[185,80,44]]];
-  for(let i=1;i<st.length;i++) if(sev<=st[i][0]){const [a,ca]=st[i-1],[b,cb]=st[i],k=(sev-a)/(b-a);return `rgb(${ca.map((x,j)=>Math.round(x+(cb[j]-x)*k)).join(',')})`;} return 'rgb(185,80,44)'; }
+function dustColor(sev){ const st=[[0,[247,183,177]],[40,[242,134,125]],[100,[224,71,59]]];
+  for(let i=1;i<st.length;i++) if(sev<=st[i][0]){const [a,ca]=st[i-1],[b,cb]=st[i],k=(sev-a)/(b-a);return `rgb(${ca.map((x,j)=>Math.round(x+(cb[j]-x)*k)).join(',')})`;} return 'rgb(224,71,59)'; }
 function paintMap(){ for(const s of SITES){ const sc=(G.scenes[s.id]||[]).at(-1), dust=openDust(s.id);
     detRects[s.id].forEach((r,k)=>{ const on=sc&&sc.mask[k]; r.setStyle({fillOpacity:on?.45:0,opacity:on?.85:0}); });
-    dustRects[s.id].forEach((r,k)=>{ const on=sc&&sc.mask[k]&&dust[k]!=null; r.setStyle({fillColor:on?dustColor(dust[k]):'#000',fillOpacity:on?.85:0}); });
+    dustRects[s.id].forEach((r,k)=>{ const on=sc&&sc.mask[k]&&dust[k]!=null; r.setStyle({fillColor:on?dustColor(dust[k]):'#000',fillOpacity:on?.9:0,weight:on?1:0,color:'#FFD3CF',opacity:on?.9:0}); });
     ovRects[s.id].forEach((r,k)=>{ const on=sc&&sc.mask[k], d=on&&dust[k]!=null; r.setStyle({fillOpacity:on?.5:0,opacity:on?.8:0,fillColor:d?dustColor(dust[k]):'#62AEEF'}); }); }
   const now=simNow().getTime();
   DISTRICTS.forEach(d=>{ const r=roofState(d,now); d.circle.setStyle({fillOpacity:.1+r.cov*3}); d.circle.setTooltipContent(`<b>${d.name}</b><br>${fmt(r.withSolar)} of ${fmt(r.analysed)} rooftops have solar (${fmt(r.cov*100,1)}%)`); }); }
@@ -1807,18 +1808,19 @@ SITES.forEach(s=>{ const b=document.createElement('button'); b.textContent=s.sho
 function selectFarm(id){ selFarm=id; document.querySelectorAll('#detailPills button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.id===id))); renderDetail(); }
 function farmSummary(s){ const sc=(G.scenes[s.id]||[]).at(-1); if(!sc) return null; const dust=openDust(s.id), e=farmEstimate(sc,dust), ds=dayStartGST(simNow().getTime());
   const clean=cleanEnergy(s,e,ds), today=clean*(1-e.soil), lost=clean*e.soil, n=Object.keys(dust).length; return {sc,dust,e,clean,today,lost,n}; }
-function dustLine(f){ return f.n?`${plural(f.n,'dusty section')}, costing ${fmt(f.lost,0)} MWh today.`:'No sections need cleaning.'; }
+const pctClean=f=>f.e.cells?f.n/f.e.cells*100:0;
+function dustLine(f){ return f.n?`${plural(f.n,'dusty section')} (${fmt(pctClean(f),0)}% of the farm), costing ${fmt(f.lost,0)} MWh today.`:'No sections need cleaning.'; }
 function sentenceFor(s,f,short){ if(!f) return 'Waiting for the first image.';
   return short?dustLine(f):`${fmt(f.e.capMW,0)} MW · ${fmt(f.today/1000,1)} GWh today. ${dustLine(f)}`; }
 function renderDetail(){ const s=siteById(selFarm), f=farmSummary(s); $('dName').textContent=s.name; const [st,cls]=farmStatus(f&&f.e,f?f.n:0);
   $('dStatus').textContent=st; $('dStatus').className='status '+cls; $('dSentence').textContent=sentenceFor(s,f,true);
-  if(!f){ ['dArea','dCap','dToday','dLoss'].forEach(i=>$(i).innerHTML='--'); $('dMeta').textContent=''; return; }
+  if(!f){ ['dArea','dCap','dToday','dLoss','dPct'].forEach(i=>$(i).innerHTML='--'); $('dMeta').textContent=''; return; }
   $('dArea').innerHTML=fmt(f.sc.area_m2/1e6,2)+'<small>km²</small>'; $('dCap').innerHTML=fmt(f.e.capMW,0)+'<small>MW</small>';
-  $('dToday').innerHTML=fmt(f.today/1000,1)+'<small>GWh</small>'; $('dLoss').innerHTML=fmt(f.lost,0)+'<small>MWh</small>';
+  $('dToday').innerHTML=fmt(f.today/1000,1)+'<small>GWh</small>'; $('dLoss').innerHTML=fmt(f.lost,0)+'<small>MWh</small>'; $('dPct').innerHTML=fmt(pctClean(f),0)+'<small>%</small>'; $('dPctL').textContent=`Sections needing cleaning (${f.n} of ${f.e.cells})`;
   $('dMeta').textContent=`${gstDate(new Date(f.sc.t_unix*1000))}, ${hm(new Date(f.sc.t_unix*1000))} GST · ${fmt(f.sc.gsd_m,1)} m/px · ${f.sc.cloud_pct}% cloud · ${f.sc.conf_pct}% confidence`; }
 const cardCharts={}, cardMaps={};
 function paintCardMap(s,sc,dust){ const cm=cardMaps[s.id]; if(!cm) return;
-  cm.rects.forEach((r,k)=>{ const on=sc&&sc.mask[k], d=on&&dust[k]!=null; r.setStyle({fillOpacity:on?(d?.55:.28):0,opacity:on?.9:0,fillColor:d?dustColor(dust[k]):'#62AEEF',color:d?'#FFD199':'#A9D6FF'}); }); }
+  cm.rects.forEach((r,k)=>{ const on=sc&&sc.mask[k], d=on&&dust[k]!=null; r.setStyle({fillOpacity:on?(d?.8:.25):0,opacity:on?.9:0,weight:d?1.4:.8,fillColor:d?dustColor(dust[k]):'#62AEEF',color:d?'#FFE3E0':'#A9D6FF'}); }); }
 function buildCards(){ $('farmCards').innerHTML=SITES.map(s=>`<article class="panel farm" id="card${s.id}">
   <div class="top"><div><h3>${s.short}</h3><span class="muted" data-r="seen">Not imaged yet</span></div><span class="status st-none" data-r="status">Not imaged yet</span></div>
   <p class="sentence" data-r="sentence">Waiting for the first image.</p>
@@ -1831,7 +1833,7 @@ function buildCards(){ $('farmCards').innerHTML=SITES.map(s=>`<article class="pa
     for(let k=0;k<GRID*GRID;k++) rects.push(L.rectangle(cb(k),{weight:.8,color:'#A9D6FF',fillColor:'#62AEEF',fillOpacity:0,opacity:0,interactive:false}).addTo(m));
     L.control.scale({imperial:false,position:'bottomleft'}).addTo(m); cardMaps[s.id]={m,rects}; });
   SITES.forEach(s=>{ cardCharts[s.id]=new Chart($('card'+s.id).querySelector('[data-r=chart]'),{type:'bar',data:{labels:[],datasets:[
-    {label:'Expected',data:[],backgroundColor:'#F2B33D',borderRadius:3,stack:'s'},{label:'Lost to dust',data:[],backgroundColor:'#D08A42',borderRadius:3,stack:'s'}]},
+    {label:'Expected',data:[],backgroundColor:'#F2B33D',borderRadius:3,stack:'s'},{label:'Lost to dust',data:[],backgroundColor:'#F2867D',borderRadius:3,stack:'s'}]},
     options:{maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.parsed.y/1000,2)} GWh`}}},
       scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:11}}},y:{stacked:true,grid:{color:'#22355A'},ticks:{maxTicksLimit:4,callback:v=>fmt(v/1000,0)+' GWh'}}}}}); }); }
 function renderCards(){ const now=simNow().getTime();
@@ -1900,7 +1902,7 @@ function renderGrowth(){ const all=[]; for(const sid in G.scenes) for(const sc o
 function thumb(cv,it){ const g=cv.getContext('2d'), w=cv.width/GRID, h=cv.height/GRID; g.fillStyle='#1D3050'; g.fillRect(0,0,cv.width,cv.height);
   const sc=it.mask?{mask:it.mask}:(G.scenes[it.site]||[]).at(-1), hl=new Set(it.cells||[]);
   for(let k=0;k<GRID*GRID;k++){ const r=Math.floor(k/GRID),c=k%GRID;
-    if(hl.has(k)){ g.fillStyle=it.kind==='dust'?'#D08A42':it.kind==='miss'?'#EC6A5E':'#F2B33D'; g.fillRect(c*w,r*h,w-.5,h-.5); } else if(sc&&sc.mask[k]){ g.fillStyle='#62AEEF'; g.fillRect(c*w,r*h,w-.5,h-.5); } } }
+    if(hl.has(k)){ g.fillStyle=it.kind==='dust'?'#F2867D':it.kind==='miss'?'#B98AF0':'#F2B33D'; g.fillRect(c*w,r*h,w-.5,h-.5); } else if(sc&&sc.mask[k]){ g.fillStyle='#62AEEF'; g.fillRect(c*w,r*h,w-.5,h-.5); } } }
 
 /* ===================== satellite ===================== */
 let hkChart, cube=null, ovCube=null;
@@ -1923,14 +1925,14 @@ function renderPasses(now){ if(!passCache.list.length||passCache.list[0].end<now
   $('passTable').tBodies[0].innerHTML=passCache.list.map(p=>`<tr><td>${gstDate(new Date(p.start)).replace(/^\w+ /,'')}, ${hm(new Date(p.start))}${p.start<=now?' (now)':''}</td><td>${p.gs.replace(' GS','')}</td><td>${fmt((p.end-p.start)/60000,0)} min</td></tr>`).join(''); }
 
 /* ===================== hero ===================== */
-function renderHero(now){ let cap=0,today=0,lost=0,n=0,seen=0;
-  for(const s of SITES){ const f=farmSummary(s); if(!f) continue; seen++; cap+=f.e.capMW; today+=f.today; lost+=f.lost; n+=f.n; }
+function renderHero(now){ let cap=0,today=0,lost=0,n=0,seen=0,tot=0;
+  for(const s of SITES){ const f=farmSummary(s); if(!f) continue; seen++; cap+=f.e.capMW; today+=f.today; lost+=f.lost; n+=f.n; tot+=f.e.cells; }
   let rc=0; DISTRICTS.forEach(d=>rc+=roofState(d,now).capMW);
   $('iCap').innerHTML=seen?fmt((cap+rc)/1000,2)+'<small>GW</small>':'--';
   $('iCapTxt').textContent=seen?`solar capacity tracked, ${seen} farms and ${DISTRICTS.length} rooftop districts`:'solar capacity tracked';
   $('iToday').innerHTML=seen?fmt(today/1000,1)+'<small>GWh</small>':'--';
   $('iTodayTxt').textContent=seen?`expected today, ${fmt(lost/1000,2)} GWh lost to dust`:'expected today';
-  $('iClean').textContent=seen?fmt(n):'--'; $('iCleanTxt').textContent=seen?(n?`sections need cleaning, worth ${fmt(lost,0)} MWh today`:'sections need cleaning'):'sections need cleaning'; }
+  $('iClean').textContent=seen?fmt(n):'--'; $('iCleanTxt').textContent=seen?(n?`sections need cleaning (${fmt(n/Math.max(tot,1)*100,0)}% of all), worth ${fmt(lost,0)} MWh today`:'sections need cleaning'):'sections need cleaning'; }
 function renderPipeline(){ let step='orbit', txt='';
   const sat=Sim.sat, site=siteById(sat.lastCaptureSite), nextP=passCache.list[0];
   if(G.source!=='sim'||!simState){ const h=G.hk.at(-1); step=h?({IMAGING:'image',INFERENCE:'detect',DOWNLINK:'down'}[h.mode]||'orbit'):'orbit'; txt=h?`Last report: ${h.mode.toLowerCase()}.`:'Waiting for the first packet from the prototype.'; }
