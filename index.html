@@ -1691,10 +1691,10 @@ const Sim = (()=>{
     return revisit;
   }
   // next time any farm is within camera reach in daylight
-  function nextImaging(from){
+  function nextImaging(from,only){
     for(let s=60;s<20*86400;s+=30){ const d=new Date(from+s*1000), st=satAt(d); if(!st) continue;
       const reach=st.alt*Math.tan(CAM.max_offnadir*D2R);
-      for(const f of farms) if(haversineKm(st.lat,st.lon,f.site.lat,f.site.lon)<reach && sunElevDeg(d,f.site.lat,f.site.lon)>15) return {t:d.getTime(), site:f.site};
+      for(const f of farms) if((!only||f.site.id===only.id)&&haversineKm(st.lat,st.lon,f.site.lat,f.site.lon)<reach && sunElevDeg(d,f.site.lat,f.site.lon)>15) return {t:d.getTime(), site:f.site};
     }
     return null;
   }
