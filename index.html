@@ -756,6 +756,18 @@ section.block{padding:36px 0 56px}
 .shead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px}
 .shead h2{font-size:28px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em}
 .shead p{margin:0;color:var(--ink-2);font-size:16px;max-width:46em}
+.srcBadge{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);background:rgba(13,23,41,.82);border:1px solid var(--rule);border-radius:999px;padding:5px 12px;margin:0 0 16px}
+.srcBadge i{width:8px;height:8px;border-radius:50%;background:var(--alarm);flex:none}
+.srcBadge.live i{background:var(--ok)}
+.flowPanel{margin-top:20px}
+.flow{display:flex;align-items:stretch;gap:6px;margin-top:12px}
+.flow .node{flex:1 1 0;min-width:0;background:var(--deck-2);border:1px solid var(--rule);border-radius:12px;padding:10px 12px}
+.flow .node b{display:block;font-size:13px;color:var(--ink);font-weight:500;margin-bottom:4px}
+.flow .node span{display:block;font-size:12px;color:var(--ink-3);line-height:1.4}
+.flow .arr{align-self:center;color:var(--sun);font-size:16px;flex:none}
+.flowFoot{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.flowFoot .notice{font-size:13px;color:var(--ink-2);margin:0;flex:1 1 320px}
+@media(max-width:900px){.flow{flex-direction:column}.flow .arr{transform:rotate(90deg);align-self:center}}
 .panel{background:var(--deck);border:1px solid var(--rule);border-radius:16px;padding:20px}
 h3{font-size:17px;font-weight:600;margin:0 0 4px}
 .muted{color:var(--ink-3);font-size:13px}
@@ -903,6 +915,7 @@ footer dt{color:var(--ink-2)} footer dd{margin:0}
   <div class="heroText">
     <div class="live"><span class="dot" id="linkDot"></span><span id="liveTxt">Locating the satellite</span></div>
     <h1>Solar Watch</h1>
+    <p class="srcBadge" id="srcBadge"><i></i><span id="srcTxt">Simulated data · prototype not connected yet</span></p>
     <p class="lede">Finds UAE solar farms from orbit, forecasts their output and sends crews where dust is costing power.</p>
     <div class="insights">
       <div class="ins"><b id="iCap">--</b><p id="iCapTxt">of solar capacity tracked</p></div>
@@ -1032,6 +1045,16 @@ footer dt{color:var(--ink-2)} footer dd{margin:0}
           <span><i class="dot" data-f="cam"></i>Camera</span><span><i class="dot" data-f="sd"></i>Storage</span><span><i class="dot" id="radioDot"></i>Radio</span>
           <span><i class="dot" data-f="ina"></i>Power</span><span><i class="dot" data-f="imu"></i>Attitude</span><span><i class="dot" data-f="temp"></i>Thermal</span>
         </div>
+      </div>
+    </div>
+    <div class="panel flowPanel"><h3>How the data gets here</h3>
+      <div class="flow" aria-label="Data flow from sensors to dashboard">
+        <div class="node"><b>1 · Sensors</b><span>LM75 temperature, MPU-6050 orientation, INA219 power, LDR sunlight</span></div><div class="arr">›</div>
+        <div class="node"><b>2 · Camera + AI</b><span>ESP32-CAM images the farm and finds the panels on board</span></div><div class="arr">›</div>
+        <div class="node"><b>3 · Flight computer</b><span>ESP32 DevKit runs the orbit schedule and packs results into packets</span></div><div class="arr">›</div>
+        <div class="node"><b>4 · Radio downlink</b><span>LoRa Ra-02 at 433 MHz, only during ground station passes</span></div><div class="arr">›</div>
+        <div class="node"><b>5 · Ground station</b><span>ESP32 + LoRa receiver, forwards packets over USB or 2.4 GHz Wi-Fi</span></div><div class="arr">›</div>
+        <div class="node"><b>6 · Dashboard</b><span>Decodes packets into maps, health, alerts and cleaning jobs</span></div>
       </div>
     </div>
     <div class="three">
@@ -2057,7 +2080,8 @@ hkChart=new Chart($('hkChart'),{type:'line',data:{labels:[],datasets:[
 /* ===================== sources, controls, loop ===================== */
 let simTime=T0.getTime(), warp=60, lastFrame=performance.now(), simState=null, follow=false;
 const simNow=()=>new Date(G.source==='sim'?simTime:Date.now());
-function protoNotice(){ if(!$('protoNotice')) return; $('protoNotice').innerHTML=FIREBASE_CONFIG?'<b>Firebase connected.</b>':'<b>Firebase not set up.</b> Connect the ground station over USB (Chrome or Edge).'; }
+function srcUI(){ const b=$('srcBadge'); if(!b) return; const live=G.source==='proto'; b.classList.toggle('live',live); $('srcTxt').textContent=live?'Live prototype data · packets received from our ground station':'Simulated data · prototype not connected yet'; }
+function protoNotice(){ srcUI(); if(!$('protoNotice')) return; $('protoNotice').innerHTML=G.source==='sim'?'<b>Showing simulated data.</b> The orbit simulator sends the same packet format as the prototype. Connect the ground station over USB (Chrome or Edge) to switch to live packets.':(FIREBASE_CONFIG?'<b>Firebase connected.</b>':'<b>Waiting for the ground station.</b> Connect it over USB (Chrome or Edge).'); }
 function setSource(src){ G.source=src; resetGround(); protoNotice(); if(src==='proto') startFirebase(); passCache={list:[]}; lastTrackMin=-1; G.dirty=true; }
 let fbStarted=false;
 async function startFirebase(){ if(!FIREBASE_CONFIG||fbStarted) return; fbStarted=true;
