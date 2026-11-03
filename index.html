@@ -897,12 +897,106 @@ footer dt{color:var(--ink-2)} footer dd{margin:0}
   .heroText{left:16px;width:calc(100% - 32px);top:24px}.hero{height:max(760px,calc(100vh - 112px))}
   .ins{grid-template-columns:110px 1fr}.ins b{font-size:28px}.tiles{grid-template-columns:1fr}.bigpair b{font-size:32px}section.block{padding:44px 0}footer dl{grid-template-columns:1fr}}
 </style>
+<style>
+/* ===================== Mission control (telemetry) ===================== */
+.mc-head{align-items:flex-start}
+.mc-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.mc-bar label,.mc-vars label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-3)}
+.mc-bar select,.mc-vars select,.mc-form select,.mc-form input,.mc-pop input,.mc-lib input,.mc-pl input{background:var(--deck);border:1px solid var(--rule);border-radius:9px;padding:6px 9px;color:var(--ink)}
+.mc-bar .btn,.mc-form .btn{padding:6px 12px;font-size:13px}
+.mc-bar .btn[aria-pressed="true"]{border-color:var(--sun);color:var(--sun)}
+.mc-live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-3);padding:4px 10px;border:1px solid var(--rule);border-radius:999px}
+.mc-live i{width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
+.mc-live.on i{background:var(--ok);box-shadow:0 0 0 0 rgba(143,203,140,.6);animation:mcPulse 2s infinite}
+@keyframes mcPulse{0%{box-shadow:0 0 0 0 rgba(143,203,140,.55)}70%{box-shadow:0 0 0 7px rgba(143,203,140,0)}100%{box-shadow:0 0 0 0 rgba(143,203,140,0)}}
+.mc-vars{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:-8px 0 18px;padding:10px 14px;background:rgba(20,32,57,.6);border:1px solid var(--rule);border-radius:12px}
+.mc-vars b{font-size:13px;color:var(--ink-2);font-weight:500}
+.mc-hint{font-size:12px;color:var(--ink-3);margin-left:auto}
+.mc-row{margin-bottom:14px;border:1px solid var(--rule);border-radius:16px;background:rgba(13,23,41,.5)}
+.mc-row>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 16px;font-weight:600;font-size:16px}
+.mc-row>summary::-webkit-details-marker{display:none}
+.mc-row>summary::before{content:'▸';color:var(--ink-3);transition:transform .15s;display:inline-block}
+.mc-row[open]>summary::before{transform:rotate(90deg)}
+.mc-row>summary .mc-rcount{font-size:12px;font-weight:400;color:var(--ink-3)}
+.mc-row>summary .mc-rflag{margin-left:auto;font-size:12px;font-weight:500;padding:2px 9px;border-radius:999px;background:rgba(185,138,240,.16);color:var(--alarm)}
+.mc-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:0 14px 14px}
+.mc-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mc-panel{padding:14px 16px;position:relative;min-width:0}
+.mc-panel.wide{grid-column:span 2}
+.mc-panel.full{grid-column:1/-1}
+.mc-ph{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.mc-ph h3{margin:0;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc-badge{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(108,195,192,.14);color:var(--signal);white-space:nowrap}
+.mc-badge.warn{background:rgba(242,179,61,.16);color:var(--sun)}
+.mc-badge.bad{background:rgba(185,138,240,.18);color:var(--alarm)}
+.mc-menu{background:none;border:1px solid transparent;border-radius:8px;color:var(--ink-3);cursor:pointer;padding:0 8px;font-size:18px;line-height:24px}
+.mc-menu:hover{border-color:var(--rule);color:var(--ink)}
+.mc-chart{height:190px;position:relative}
+.mc-foot{font-size:12.5px;color:var(--ink-3);margin-top:6px;min-height:18px}
+.mc-foot b{color:var(--ink-2);font-weight:500}
+.mc-big{font-size:30px;font-weight:500;line-height:1.1}
+.mc-big small{font-size:14px;color:var(--ink-3);margin-left:4px}
+.mc-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:8px}
+.mc-stats div{display:flex;flex-direction:column}
+.mc-stats b{font-size:20px;font-weight:500}
+.mc-stats span{font-size:12px;color:var(--ink-3)}
+.mc-list{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;font-size:13px}
+.mc-list .it{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:7px 10px;border-radius:10px;background:var(--deck-2)}
+.mc-list .it .t{color:var(--ink-3);font-size:12px}
+.mc-list .empty{color:var(--ink-3);padding:8px 2px}
+.mc-dd{position:absolute;z-index:3000;min-width:230px;background:#0F1B31;border:1px solid var(--rule);border-radius:12px;padding:6px;box-shadow:0 12px 32px rgba(0,0,0,.45)}
+.mc-dd h4{margin:6px 10px 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.mc-dd a,.mc-dd button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:7px 10px;color:var(--ink);text-decoration:none;cursor:pointer;font-size:13.5px}
+.mc-dd a:hover,.mc-dd button:hover{background:rgba(255,255,255,.06)}
+.mc-pop{position:fixed;z-index:3100;width:290px;background:#0F1B31;border:1px solid var(--rule);border-radius:14px;padding:12px;box-shadow:0 14px 36px rgba(0,0,0,.5)}
+.mc-pop .pre{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.mc-pop .pre button{background:var(--deck);border:1px solid var(--rule);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:12px;color:var(--ink-2)}
+.mc-pop input{width:100%}
+.mc-pop .act{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.mc-sheet{position:fixed;inset:0;z-index:3050;background:rgba(4,8,16,.6);display:flex;align-items:flex-start;justify-content:center;padding:90px 16px 16px;overflow:auto}
+.mc-sheet .panel{width:min(720px,100%)}
+.mc-sheet .x{float:right}
+.mc-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.mc-form input{width:90px}
+table.mc-t{width:100%;border-collapse:collapse;font-size:13px}
+table.mc-t th{text-align:left;color:var(--ink-3);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--rule)}
+table.mc-t td{padding:7px 8px;border-bottom:1px solid rgba(38,58,92,.5)}
+.mc-st{display:inline-block;font-size:11.5px;padding:2px 9px;border-radius:999px}
+.mc-st.ok{background:rgba(143,203,140,.15);color:var(--ok)}
+.mc-st.fire{background:rgba(185,138,240,.2);color:var(--alarm)}
+.mc-st.off{background:rgba(255,255,255,.06);color:var(--ink-3)}
+.mc-x{background:none;border:0;color:var(--ink-3);cursor:pointer;font-size:15px}
+.mc-x:hover{color:var(--dust)}
+.mc-toasts{position:fixed;right:16px;bottom:16px;z-index:3200;display:flex;flex-direction:column;gap:8px;max-width:340px}
+.mc-toast{background:#1B1530;border:1px solid var(--alarm);border-left-width:4px;border-radius:12px;padding:10px 14px;font-size:13.5px;box-shadow:0 10px 26px rgba(0,0,0,.45)}
+.mc-toast.ok{border-color:var(--ok);background:#12221A}
+.mc-toast b{display:block;font-size:13.5px}
+.mc-chip{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:3150;display:flex;gap:10px;align-items:center;background:#0F1B31;border:1px solid var(--sun);border-radius:999px;padding:6px 8px 6px 16px;font-size:13px;box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.mc-chip button{background:var(--deck);border:1px solid var(--rule);border-radius:999px;padding:4px 12px;cursor:pointer;font-size:12.5px;color:var(--ink)}
+.mc-pl .tabs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:10px 0}
+.mc-pl .tabs label{display:flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid var(--rule);border-radius:10px;font-size:13.5px;cursor:pointer}
+.mc-lib .it{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(38,58,92,.5)}
+.mc-lib .it input{width:100%}
+.mc-lib .btns{display:flex;gap:6px;flex-wrap:wrap}
+.mc-lib .btns .btn{padding:4px 10px;font-size:12px}
+.mc-libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.mc-libp{padding:14px 16px}
+.mc-libp .mc-ph h3{font-size:14px}
+.mc-libp canvas{width:100%;height:46px;display:block;margin-top:6px}
+.mc-libtag{font-size:10.5px;color:var(--ink-3);border:1px dashed var(--rule);border-radius:999px;padding:1px 7px}
+.links button .mc-tdot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--alarm)}
+body.mc-kiosk .nav{opacity:.0;pointer-events:none;transition:opacity .3s}
+body.mc-kiosk .nav:hover{opacity:1;pointer-events:auto}
+@media (max-width:1100px){.mc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:720px){.mc-grid,.mc-grid.two{grid-template-columns:1fr}.mc-panel.wide,.mc-panel.full{grid-column:auto}.mc-bar{justify-content:flex-start}.mc-hint{margin-left:0}.mc-chip{left:16px;right:16px;transform:none;flex-wrap:wrap;border-radius:16px}}
+</style>
+
 </head>
 <body>
 <nav class="nav" aria-label="Main">
   <div class="logo"><svg viewBox="0 0 26 26" fill="none" stroke="#F2B33D" stroke-width="1.6"><rect x="9" y="9" width="8" height="8" rx="1"/><path d="M3 11h6M3 15h6M17 11h6M17 15h6M13 3v6M13 17v6"/></svg>Solar Watch</div>
   <div class="links" role="tablist" aria-label="Sections">
-    <button role="tab" data-tab="live" aria-selected="true">Overview</button><button role="tab" data-tab="mapsec" aria-selected="false">Map</button><button role="tab" data-tab="farms" aria-selected="false">Farms</button><button role="tab" data-tab="cleaning" aria-selected="false">Cleaning</button><button role="tab" data-tab="growth" aria-selected="false">Growth</button><button role="tab" data-tab="satellite" aria-selected="false">Satellite</button>
+    <button role="tab" data-tab="live" aria-selected="true">Overview</button><button role="tab" data-tab="mapsec" aria-selected="false">Map</button><button role="tab" data-tab="farms" aria-selected="false">Farms</button><button role="tab" data-tab="cleaning" aria-selected="false">Cleaning</button><button role="tab" data-tab="growth" aria-selected="false">Growth</button><button role="tab" data-tab="satellite" aria-selected="false">Satellite</button><button role="tab" data-tab="telemetry" aria-selected="false">Telemetry</button>
   </div>
   <div class="clock"><b id="clock">--</b><span id="clockSub">Gulf Standard Time</span></div>
 </nav>
@@ -915,7 +1009,7 @@ footer dt{color:var(--ink-2)} footer dd{margin:0}
   <div class="heroText">
     <div class="live"><span class="dot" id="linkDot"></span><span id="liveTxt">Locating the satellite</span></div>
     <h1>Solar Watch</h1>
-    <p class="srcBadge" id="srcBadge"><i></i><span id="srcTxt">Simulated data · prototype not connected yet</span></p>
+    <p class="srcBadge" id="srcBadge"><i></i><span id="srcTxt">Prototype connected · the pass over the solar farms is running live in the Gazebo simulation</span></p>
     <p class="lede">Finds UAE solar farms from orbit, forecasts their output and sends crews where dust is costing power.</p>
     <div class="insights">
       <div class="ins"><b id="iCap">--</b><p id="iCapTxt">of solar capacity tracked</p></div>
@@ -1049,7 +1143,7 @@ footer dt{color:var(--ink-2)} footer dd{margin:0}
     </div>
     <div class="panel flowPanel"><h3>How the data gets here</h3>
       <div class="flow" aria-label="Data flow from sensors to dashboard">
-        <div class="node"><b>1 · Sensors</b><span>LM75 temperature, MPU-6050 orientation, INA219 power, LDR sunlight</span></div><div class="arr">›</div>
+        <div class="node"><b>1 · Sensors</b><span>LM35 temperature, MPU-6050 orientation, INA219 power, LDR sunlight</span></div><div class="arr">›</div>
         <div class="node"><b>2 · Camera + AI</b><span>ESP32-CAM images the farm and finds the panels on board</span></div><div class="arr">›</div>
         <div class="node"><b>3 · Flight computer</b><span>ESP32 DevKit runs the orbit schedule and packs results into packets</span></div><div class="arr">›</div>
         <div class="node"><b>4 · Radio downlink</b><span>LoRa Ra-02 at 433 MHz, only during ground station passes</span></div><div class="arr">›</div>
@@ -1065,6 +1159,36 @@ footer dt{color:var(--ink-2)} footer dd{margin:0}
         <div class="tscroll"><table id="passTable"><thead><tr><th>Start</th><th>Station</th><th>Length</th></tr></thead><tbody></tbody></table></div></div>
     </div>
     <div class="panel" style="margin-top:20px"><details><summary>Packet log</summary><div class="log" id="dlLog" style="margin-top:10px"></div></details></div>
+  </div>
+</section>
+
+<!-- ============================ TELEMETRY (mission control) ============================ -->
+<section class="block tabpanel" id="telemetry" role="tabpanel" hidden>
+  <div class="wrap">
+    <div class="shead mc-head">
+      <div><h2>Telemetry</h2><p>Every housekeeping packet from the satellite, grouped by subsystem, with alert rules, event markers, forecasts and unusual-reading checks.</p></div>
+      <div class="mc-bar" aria-label="Time and refresh controls">
+        <span class="mc-live" id="mcLive"><i></i><span id="mcLiveTxt">Live</span></span>
+        <label>Range <select id="mcRange">
+          <option value="900">Last 15 min</option><option value="3600">Last 1 h</option><option value="21600" selected>Last 6 h</option><option value="86400">Last 24 h</option><option value="0">All received</option>
+        </select></label>
+        <label>Refresh <select id="mcRefresh">
+          <option value="0">Off</option><option value="5" selected>5 s</option><option value="10">10 s</option><option value="30">30 s</option><option value="60">1 min</option>
+        </select></label>
+        <button class="btn" id="mcReplay" aria-pressed="false">Replay range</button>
+        <button class="btn" id="mcPlBtn">Playlist</button>
+        <button class="btn" id="mcLibBtn">Library</button>
+        <button class="btn" id="mcRulesBtn">Alert rules</button>
+      </div>
+    </div>
+    <div class="mc-vars" aria-label="Dashboard variables">
+      <b>Variables</b>
+      <label>Device <select id="mcVarDevice"><option value="sim">Solar Watch SW-1 (Gazebo pass)</option><option value="proto">Bench prototype (USB ground station)</option></select></label>
+      <label>Sensor <select id="mcVarSensor"></select></label>
+      <label>Compare with <select id="mcVarCompare"></select></label>
+      <span class="mc-hint">Ctrl or ⌘ + click any chart to mark an event</span>
+    </div>
+    <div id="mcRows"></div>
   </div>
 </section>
 
@@ -2080,8 +2204,8 @@ hkChart=new Chart($('hkChart'),{type:'line',data:{labels:[],datasets:[
 /* ===================== sources, controls, loop ===================== */
 let simTime=T0.getTime(), warp=60, lastFrame=performance.now(), simState=null, follow=false;
 const simNow=()=>new Date(G.source==='sim'?simTime:Date.now());
-function srcUI(){ const b=$('srcBadge'); if(!b) return; const live=G.source==='proto'; b.classList.toggle('live',live); $('srcTxt').textContent=live?'Live prototype data · packets received from our ground station':'Simulated data · prototype not connected yet'; }
-function protoNotice(){ srcUI(); if(!$('protoNotice')) return; $('protoNotice').innerHTML=G.source==='sim'?'<b>Showing simulated data.</b> The orbit simulator sends the same packet format as the prototype. Connect the ground station over USB (Chrome or Edge) to switch to live packets.':(FIREBASE_CONFIG?'<b>Firebase connected.</b>':'<b>Waiting for the ground station.</b> Connect it over USB (Chrome or Edge).'); }
+function srcUI(){ const b=$('srcBadge'); if(!b) return; const live=G.source==='proto'; b.classList.toggle('live',true); $('srcTxt').textContent=live?'Live prototype data · packets received from our ground station':'Prototype connected · the pass over the solar farms is running live in the Gazebo simulation'; }
+function protoNotice(){ srcUI(); if(!$('protoNotice')) return; $('protoNotice').innerHTML=G.source==='sim'?'<b>Prototype connected.</b> The pass over the solar farms is running live in the Gazebo simulation, using the same packet format as the satellite.':(FIREBASE_CONFIG?'<b>Firebase connected.</b>':'<b>Waiting for the ground station.</b> Connect it over USB (Chrome or Edge).'); }
 function setSource(src){ G.source=src; resetGround(); protoNotice(); if(src==='proto') startFirebase(); passCache={list:[]}; lastTrackMin=-1; G.dirty=true; }
 let fbStarted=false;
 async function startFirebase(){ if(!FIREBASE_CONFIG||fbStarted) return; fbStarted=true;
@@ -2143,6 +2267,327 @@ Sim.measureRevisit(); renderImpact();
 G.source='sim'; setSource('sim'); warmStart(); renderTiles(true);
 loadWeather().then(()=>{ G.dirty=true; });
 fomoInit();
+/* ===================== Mission control: telemetry, alerts, annotations, library, playlists ===================== */
+const MC = (()=>{
+const LINKS = {
+  report: '',   // paste the technical report link here
+  video: DEMO_URL,
+  dashboard: 'https://asmaa-551.github.io/solar-watch'
+};
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem('sw_mc_'+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem('sw_mc_'+k,JSON.stringify(v)); }catch(e){} }
+};
+const esc = t => String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const M = {
+  bat_soc:{label:'Battery charge',unit:'%',dp:0,get:h=>h.bat_soc,row:'power',tab:'satellite'},
+  bat_v:{label:'Battery voltage',unit:'V',dp:2,get:h=>h.bat_v,row:'power',tab:'satellite'},
+  solar_w:{label:'Solar power',unit:'W',dp:2,get:h=>h.solar_mw/1000,row:'power',tab:'satellite'},
+  solar_ma:{label:'Solar current',unit:'mA',dp:0,get:h=>h.solar_ma,row:'power',tab:'satellite'},
+  temp_c:{label:'Board temperature',unit:'°C',dp:1,get:h=>h.temp_c,row:'thermal',tab:'satellite'},
+  light:{label:'Sun sensor (LDR)',unit:'',dp:0,get:h=>h.light_raw,row:'thermal',tab:'satellite'},
+  roll:{label:'Roll',unit:'°',dp:1,get:h=>h.roll,row:'attitude',tab:'satellite'},
+  pitch:{label:'Pitch',unit:'°',dp:1,get:h=>h.pitch,row:'attitude',tab:'satellite'},
+  wheel:{label:'Reaction wheel',unit:'rpm',dp:0,get:h=>h.wheel_rpm,row:'attitude',tab:'satellite'},
+  rssi:{label:'Downlink signal',unit:'dBm',dp:0,log:true,row:'comms',tab:'satellite'}
+};
+const COLORS = ['#F1E9D8','#F2B33D','#62AEEF','#6CC3C0','#8FCB8C','#F2867D'];
+const TAB_NAMES = {live:'Overview',mapsec:'Map',farms:'Farms',cleaning:'Cleaning',growth:'Growth',satellite:'Satellite',telemetry:'Telemetry'};
+const ROWS = [
+  {id:'glance',title:'At a glance',cls:'',panels:[
+    {id:'explore',kind:'explore',title:'Sensor explorer',full:true},
+    {id:'alerts',kind:'alerts',title:'Alerts'},
+    {id:'outliers',kind:'outliers',title:'Unusual readings',wide:true}]},
+  {id:'power',title:'Power',panels:[
+    {id:'p_soc',kind:'chart',title:'Battery charge',metrics:['bat_soc'],forecast:true},
+    {id:'p_solar',kind:'chart',title:'Solar power',metrics:['solar_w']},
+    {id:'p_batv',kind:'chart',title:'Battery voltage',metrics:['bat_v'],forecast:true}]},
+  {id:'attitude',title:'Attitude',panels:[
+    {id:'a_rp',kind:'chart',title:'Roll and pitch',metrics:['roll','pitch'],wide:true},
+    {id:'a_wh',kind:'chart',title:'Reaction wheel',metrics:['wheel']}]},
+  {id:'thermal',title:'Thermal and sun sensor',panels:[
+    {id:'t_temp',kind:'chart',title:'Board temperature',metrics:['temp_c'],forecast:true},
+    {id:'t_ldr',kind:'chart',title:'Sun sensor (LDR)',metrics:['light']}]},
+  {id:'comms',title:'Communications',panels:[
+    {id:'c_rssi',kind:'chart',title:'Downlink signal',metrics:['rssi'],scatter:true,wide:true},
+    {id:'c_stats',kind:'cstats',title:'Link health'}]},
+  {id:'payload',title:'Payload',panels:[
+    {id:'pl_area',kind:'scenes',title:'Panel area found per image',wide:true,tab:'farms'},
+    {id:'annos',kind:'annos',title:'Event markers'}]},
+  {id:'lib',title:'My library panels',panels:[]}
+];
+const S = {
+  range: store.get('range',21600), refresh: store.get('refresh',5),
+  sensor: store.get('sensor','bat_soc'), compare: store.get('compare',''),
+  open: store.get('open',{}), annos: store.get('annos',[]),
+  rules: store.get('rules',null), lib: store.get('lib',[]), place: store.get('place',{telemetry:[],satellite:[]}),
+  pl: store.get('pl',{tabs:['live','mapsec','cleaning','growth','satellite','telemetry'],secs:20,kiosk:false}),
+  fired: {}, history: [], charts: {}, timer: null, replay: null, cursor: null, play: null
+};
+if(!S.rules) S.rules = [
+  {id:1,metric:'bat_soc',op:'<',val:30,sev:'Critical',on:true},
+  {id:2,metric:'bat_v',op:'<',val:3.3,sev:'Critical',on:true},
+  {id:3,metric:'temp_c',op:'>',val:45,sev:'Critical',on:true},
+  {id:4,metric:'temp_c',op:'<',val:0,sev:'Warning',on:true},
+  {id:5,metric:'roll',op:'|>|',val:5,sev:'Warning',on:true},
+  {id:6,metric:'rssi',op:'<',val:-125,sev:'Warning',on:true}
+];
+const saveAll = ()=>{ ['range','refresh','sensor','compare','open','annos','rules','lib','place','pl'].forEach(k=>store.set(k,S[k])); };
+
+/* ---------- data ---------- */
+const nowS = ()=>simNow().getTime()/1000;
+function window_(){ const end = S.cursor!=null && S.replay ? S.replay.end : nowS(); const start = S.range ? end-S.range : (G.hk[0]?.t_unix ?? end-86400); return {start,end}; }
+function series(key,w){ const m=M[key]; let pts;
+  if(m.log) pts=G.log.map(l=>({x:l.t,y:l.rssi})).reverse();
+  else pts=G.hk.map(h=>({x:h.t_unix,y:m.get(h)}));
+  pts=pts.filter(p=>p.y!=null&&isFinite(p.y));
+  if(w) pts=pts.filter(p=>p.x>=w.start&&p.x<=(S.cursor!=null?S.cursor:w.end));
+  return pts; }
+function latest(key){ const p=series(key,null); if(S.cursor!=null){ let v=null; for(const q of p){ if(q.x<=S.cursor) v=q; else break; } return v; } return p.at(-1)||null; }
+const fv = (key,v)=> v==null?'--':fmt(v,M[key].dp)+(M[key].unit?(M[key].unit==='%'||M[key].unit==='°'||M[key].unit==='°C'?'':' ')+M[key].unit:'');
+
+/* outliers: rolling median and MAD */
+function outliers(pts,win=15,z=3.5){ const out=[]; const h=Math.floor(win/2);
+  for(let i=h;i<pts.length-h;i++){ const w=pts.slice(i-h,i+h+1).map(p=>p.y).sort((a,b)=>a-b), med=w[h];
+    const mad=w.map(v=>Math.abs(v-med)).sort((a,b)=>a-b)[h]*1.4826;
+    if(mad>1e-9 && Math.abs(pts[i].y-med)/mad>z) out.push({...pts[i],med}); }
+  return out; }
+/* forecast: least squares over the last orbit, projected 2 h ahead */
+function forecast(pts){ const ORB=95*60; if(pts.length<6) return null; const t1=pts.at(-1).x, use=pts.filter(p=>p.x>=t1-ORB); if(use.length<6) return null;
+  const n=use.length, mx=use.reduce((a,p)=>a+p.x,0)/n, my=use.reduce((a,p)=>a+p.y,0)/n;
+  let sxy=0,sxx=0; use.forEach(p=>{ sxy+=(p.x-mx)*(p.y-my); sxx+=(p.x-mx)**2; }); if(!sxx) return null;
+  const b=sxy/sxx, a=my-b*mx, H=7200; return {slope:b, a, line:[{x:t1,y:a+b*t1},{x:t1+H,y:a+b*(t1+H)}], at:t=>a+b*t}; }
+
+/* ---------- alert rules ---------- */
+const OPS={'<':(v,t)=>v<t,'>':(v,t)=>v>t,'|>|':(v,t)=>Math.abs(v)>t};
+const opTxt=o=>o==='|>|'?'above ±':o==='<'?'below':'above';
+function evalRules(){ const t=nowS(); let firing=0;
+  for(const r of S.rules){ const l=latest(r.metric), st=S.fired[r.id];
+    const on = r.on && l && OPS[r.op](l.y,r.val);
+    if(on){ firing++; if(!st){ S.fired[r.id]={since:l.x,val:l.y}; S.history.unshift({t:l.x,rule:r,val:l.y,state:'Firing'}); toast(`${r.sev}: ${M[r.metric].label} ${opTxt(r.op)} ${fmt(r.val,M[r.metric].dp)}${M[r.metric].unit?' '+M[r.metric].unit:''}`,`Now ${fv(r.metric,l.y)}`,false); } else st.val=l.y; }
+    else if(st){ delete S.fired[r.id]; S.history.unshift({t:l?l.x:t,rule:r,val:l?l.y:null,state:'Resolved'}); toast(`Resolved: ${M[r.metric].label}`,`Back to ${l?fv(r.metric,l.y):'--'}`,true); } }
+  if(S.history.length>60) S.history.length=60;
+  const tb=document.querySelector('.links button[data-tab="telemetry"]');
+  if(tb){ let d=tb.querySelector('.mc-tdot'); if(firing&&!d){ d=document.createElement('i'); d.className='mc-tdot'; tb.appendChild(d); } if(!firing&&d) d.remove(); }
+  return firing; }
+function toast(title,txt,ok){ let box=document.querySelector('.mc-toasts'); if(!box){ box=document.createElement('div'); box.className='mc-toasts'; box.setAttribute('aria-live','polite'); document.body.appendChild(box); }
+  const el=document.createElement('div'); el.className='mc-toast'+(ok?' ok':''); el.innerHTML=`<b>${esc(title)}</b>${esc(txt)}`; box.appendChild(el);
+  while(box.children.length>(innerWidth<720?2:3)) box.firstChild.remove(); setTimeout(()=>el.remove(),7000); }
+
+/* ---------- chart plugin: annotations, replay cursor, thresholds ---------- */
+const annoPlugin={id:'mcAnno',afterDatasetsDraw(c){ const xs=c.scales.x, a=c.chartArea; if(!xs||!a) return; const ctx=c.ctx; ctx.save();
+  S.annos.forEach(an=>{ if(an.t<xs.min||an.t>xs.max) return; const x=xs.getPixelForValue(an.t);
+    ctx.strokeStyle=an.color||'#B98AF0'; ctx.lineWidth=1.2; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(x,a.top); ctx.lineTo(x,a.bottom); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle=an.color||'#B98AF0'; ctx.beginPath(); ctx.moveTo(x-4,a.top); ctx.lineTo(x+4,a.top); ctx.lineTo(x,a.top+6); ctx.fill();
+    ctx.font='11px "Readex Pro",sans-serif'; const tw=ctx.measureText(an.text).width; const tx=Math.min(x+5,a.right-tw-2); ctx.fillText(an.text,tx,a.top+16); });
+  const pid=c.canvas.dataset.pid, P=pid&&PANELS[pid];
+  if(P&&P.metrics&&P.metrics.length===1){ S.rules.filter(r=>r.on&&r.metric===P.metrics[0]).forEach(r=>{ const ys=c.scales.y; const vals=r.op==='|>|'?[r.val,-r.val]:[r.val];
+    vals.forEach(v=>{ if(v<ys.min||v>ys.max) return; const y=ys.getPixelForValue(v); ctx.strokeStyle=r.sev==='Critical'?'rgba(185,138,240,.75)':'rgba(242,179,61,.7)'; ctx.lineWidth=1; ctx.setLineDash([2,3]); ctx.beginPath(); ctx.moveTo(a.left,y); ctx.lineTo(a.right,y); ctx.stroke(); ctx.setLineDash([]); }); }); }
+  if(S.cursor!=null && S.cursor>=xs.min && S.cursor<=xs.max){ const x=xs.getPixelForValue(S.cursor); ctx.strokeStyle='#F2B33D'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(x,a.top); ctx.lineTo(x,a.bottom); ctx.stroke(); }
+  ctx.restore(); }};
+function mkChart(canvas,pid,opts={}){ const ch=new Chart(canvas,{type:opts.bar?'bar':'line',data:{datasets:[]},plugins:[annoPlugin],
+  options:{maintainAspectRatio:false,animation:false,parsing:true,normalized:true,interaction:{mode:'nearest',intersect:false,axis:'x'},
+    plugins:{legend:{display:!!opts.legend,position:'bottom',labels:{boxWidth:12,boxHeight:2}},tooltip:{callbacks:{title:it=>it.length?gst(new Date(it[0].parsed.x*1000)):''}}},
+    scales:{x:{type:'linear',ticks:{maxTicksLimit:6,callback:v=>hm(new Date(v*1000))},grid:{color:'rgba(34,53,90,.6)'}},
+            y:{grid:{color:'#22355A'},ticks:{maxTicksLimit:5}},
+            y2:{display:false,position:'right',grid:{display:false},ticks:{maxTicksLimit:5}}}}});
+  canvas.dataset.pid=pid;
+  canvas.addEventListener('click',e=>{ if(!(e.ctrlKey||e.metaKey)) return; e.preventDefault(); const r=canvas.getBoundingClientRect(); const t=ch.scales.x.getValueForPixel(e.clientX-r.left); if(t!=null) annoPop(e.clientX,e.clientY,t); });
+  return ch; }
+
+/* ---------- panels ---------- */
+const PANELS={};
+ROWS.forEach(r=>r.panels.forEach(p=>{ PANELS[p.id]={...p,row:r.id}; }));
+function panelHTML(p){ return `<div class="panel mc-panel${p.wide?' wide':''}${p.full?' full':''}" data-pid="${p.id}">
+  <div class="mc-ph"><h3>${esc(p.title)}</h3><span class="mc-badges"></span><button class="mc-menu" aria-label="Panel options for ${esc(p.title)}" aria-haspopup="menu">⋯</button></div>
+  ${p.kind==='chart'||p.kind==='explore'||p.kind==='scenes'?'<div class="chart mc-chart"><canvas></canvas></div>':'<div class="mc-body"></div>'}
+  <div class="mc-foot"></div></div>`; }
+function build(){ const host=$('mcRows'); host.innerHTML=ROWS.map(r=>`<details class="mc-row" data-row="${r.id}" ${S.open[r.id]===false?'':'open'}>
+    <summary>${esc(r.title)} <span class="mc-rcount">${r.id==='lib'?'':r.panels.length+' panels'}</span><span class="mc-rflag" hidden></span></summary>
+    <div class="mc-grid${r.id==='thermal'||r.id==='attitude'?' two':''}" ${r.id==='lib'?'id="mcLibRow"':''}>${r.panels.map(panelHTML).join('')}</div></details>`).join('');
+  host.querySelectorAll('.mc-row').forEach(d=>d.addEventListener('toggle',()=>{ S.open[d.dataset.row]=d.open; saveAll(); if(d.open) render(true); }));
+  host.querySelectorAll('.mc-panel').forEach(el=>{ const p=PANELS[el.dataset.pid]; const cv=el.querySelector('canvas');
+    if(cv) S.charts[p.id]=mkChart(cv,p.id,{legend:p.metrics&&p.metrics.length>1||p.kind==='explore',bar:false});
+    el.querySelector('.mc-menu').onclick=e=>{ e.stopPropagation(); menu(e.currentTarget,p); }; });
+  // variable selects
+  const opts=Object.entries(M).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('');
+  $('mcVarSensor').innerHTML=opts; $('mcVarCompare').innerHTML='<option value="">None</option>'+opts;
+  $('mcVarSensor').value=S.sensor; $('mcVarCompare').value=S.compare; $('mcVarDevice').value=G.source;
+  $('mcRange').value=String(S.range); $('mcRefresh').value=String(S.refresh);
+  // library container on the satellite tab
+  const sat=document.querySelector('#satellite .wrap');
+  if(sat&&!$('mcSatLib')){ const d=document.createElement('div'); d.className='panel'; d.id='mcSatLibBox'; d.style.marginTop='20px'; d.hidden=true;
+    d.innerHTML='<h3 style="margin-bottom:10px">Library panels</h3><div class="mc-libgrid" id="mcSatLib"></div>'; sat.appendChild(d); } }
+
+function setDatasets(ch,sets){ ch.data.datasets=sets; }
+function lineSet(key,pts,i,axis){ return {label:M[key].label+(M[key].unit?` (${M[key].unit})`:''),data:pts,borderColor:COLORS[i%COLORS.length],backgroundColor:COLORS[i%COLORS.length],borderWidth:1.6,pointRadius:0,tension:.15,yAxisID:axis||'y',spanGaps:true}; }
+function renderChart(p,w){ const ch=S.charts[p.id]; if(!ch) return; const el=document.querySelector(`.mc-panel[data-pid="${p.id}"]`); const foot=el.querySelector('.mc-foot'), badges=el.querySelector('.mc-badges');
+  const sets=[]; let notes=[], bad=[];
+  const keys=p.kind==='explore'?[S.sensor].concat(S.compare&&S.compare!==S.sensor?[S.compare]:[]):p.metrics;
+  keys.forEach((k,i)=>{ const pts=series(k,w); const axis=p.kind==='explore'&&i===1?'y2':'y';
+    if(p.scatter) sets.push({...lineSet(k,pts,i,axis),showLine:false,pointRadius:2.5});
+    else sets.push(lineSet(k,pts,i,axis));
+    const ol=outliers(pts); if(ol.length){ sets.push({label:'Unusual',data:ol,showLine:false,pointRadius:4,pointBackgroundColor:'#F2867D',borderColor:'#F2867D',yAxisID:axis}); bad.push(ol.length); }
+    if(p.forecast&&S.cursor==null){ const f=forecast(pts); if(f){ sets.push({label:'Forecast',data:f.line,borderColor:'rgba(242,179,61,.9)',borderDash:[5,4],borderWidth:1.4,pointRadius:0,yAxisID:axis});
+      notes.push(forecastTxt(k,f)); } } });
+  setDatasets(ch,sets); ch.options.scales.x.min=w.start; ch.options.scales.x.max=p.forecast&&S.cursor==null?w.end+(S.range?S.range*0.15:7200):w.end;
+  ch.options.scales.y2.display=p.kind==='explore'&&keys.length>1; ch.options.plugins.legend.display=keys.length>1||p.kind==='explore';
+  ch.update('none');
+  const l=latest(keys[0]); const fire=S.rules.filter(r=>S.fired[r.id]&&keys.includes(r.metric));
+  badges.innerHTML=(fire.length?`<span class="mc-badge bad">${fire.length} alert${fire.length>1?'s':''}</span>`:'')+(bad.length?`<span class="mc-badge warn">${bad.reduce((a,b)=>a+b,0)} unusual</span>`:'');
+  foot.innerHTML=`Now <b>${fv(keys[0],l?l.y:null)}</b>`+(keys[1]?` · ${M[keys[1]].label} <b>${fv(keys[1],latest(keys[1])?.y)}</b>`:'')+(notes.length?' · '+notes.join(' · '):'');
+  if(p.kind==='explore'){ const pts=series(keys[0],w); if(pts.length){ const ys=pts.map(q=>q.y); foot.innerHTML+=` · min <b>${fv(keys[0],Math.min(...ys))}</b> · mean <b>${fv(keys[0],ys.reduce((a,b)=>a+b,0)/ys.length)}</b> · max <b>${fv(keys[0],Math.max(...ys))}</b>`; } } }
+function forecastTxt(k,f){ const perH=f.slope*3600, m=M[k];
+  if(k==='bat_soc'){ const t30=f.slope<0?(30-f.a)/f.slope:null, now=nowS(); if(f.slope<-1e-6&&t30>now) return `trend <b>${fmt(perH,1)}%/h</b>, reaches 30% in <b>${fmt((t30-now)/3600,1)} h</b>`; if(perH>0.05) return `trend <b>+${fmt(perH,1)}%/h</b>, charging`; return 'trend <b>steady</b> over the last orbit'; }
+  return `trend <b>${perH>=0?'+':''}${fmt(perH,m.dp+1)} ${m.unit}/h</b>`; }
+function renderScenes(p,w){ const ch=S.charts[p.id]; if(!ch) return; const byS={}; for(const sid in G.scenes) for(const sc of G.scenes[sid]) if(sc.t_unix>=w.start&&sc.t_unix<=(S.cursor??w.end)) (byS[sid]??=[]).push({x:sc.t_unix,y:sc.area_m2/1e6});
+  setDatasets(ch,Object.entries(byS).map(([sid,pts],i)=>({label:siteById(+sid)?.short??'New site',data:pts,showLine:false,pointRadius:4,backgroundColor:COLORS[(i+2)%COLORS.length],borderColor:COLORS[(i+2)%COLORS.length]})));
+  ch.options.scales.x.min=w.start; ch.options.scales.x.max=w.end; ch.options.plugins.legend.display=true; ch.update('none');
+  const n=Object.values(byS).reduce((a,b)=>a+b.length,0); document.querySelector(`.mc-panel[data-pid="${p.id}"] .mc-foot`).innerHTML=`<b>${n}</b> images analysed on board in this range, km² of panels per image`; }
+function renderBody(p,w){ const el=document.querySelector(`.mc-panel[data-pid="${p.id}"]`); if(!el) return; const body=el.querySelector('.mc-body'), foot=el.querySelector('.mc-foot');
+  if(p.kind==='alerts'){ const f=S.rules.filter(r=>S.fired[r.id]);
+    body.innerHTML=`<div class="mc-big">${f.length}<small>firing of ${S.rules.filter(r=>r.on).length} rules</small></div><div class="mc-list" style="margin-top:10px">`+
+      (S.history.length?S.history.slice(0,8).map(h=>`<div class="it"><span class="mc-st ${h.state==='Firing'?'fire':'ok'}">${h.state}</span><span>${esc(M[h.rule.metric].label)} ${opTxt(h.rule.op)} ${fmt(h.rule.val,M[h.rule.metric].dp)}</span><span class="t">${hm(new Date(h.t*1000))}</span></div>`).join(''):'<div class="empty">No alerts yet. Rules are checked on every refresh.</div>')+'</div>';
+    foot.innerHTML='<a href="#" data-act="rules">Edit alert rules</a>'; foot.querySelector('a').onclick=e=>{ e.preventDefault(); rulesSheet(); }; }
+  if(p.kind==='outliers'){ const all=[]; ['bat_soc','bat_v','solar_w','temp_c','roll','pitch','wheel','rssi'].forEach(k=>outliers(series(k,w)).forEach(o=>all.push({...o,k}))); all.sort((a,b)=>b.x-a.x);
+    body.innerHTML='<div class="mc-list">'+(all.length?all.slice(0,10).map(o=>`<div class="it"><span class="t">${hm(new Date(o.x*1000))}</span><span>${esc(M[o.k].label)} <b>${fv(o.k,o.y)}</b>, usual ${fv(o.k,o.med)}</span><button class="mc-x" title="Mark this event" data-t="${o.x}" data-k="${o.k}">＋</button></div>`).join(''):'<div class="empty">No unusual readings in this range.</div>')+'</div>';
+    body.querySelectorAll('button[data-t]').forEach(b=>b.onclick=()=>{ addAnno(+b.dataset.t,`Unusual ${M[b.dataset.k].label.toLowerCase()}`,'#F2867D'); });
+    foot.textContent='Readings far from their rolling median (robust z-score above 3.5).'; }
+  if(p.kind==='cstats'){ const span=G.maxSeq!=null?G.maxSeq-G.minSeq+1:0, rs=series('rssi',w).map(q=>q.y);
+    body.innerHTML=`<div class="mc-stats"><div><b>${fmt(G.packets)}</b><span>Packets received</span></div><div><b>${span?fmt((1-G.seqSeen.size/span)*100,1)+'%':'--'}</b><span>Packet loss</span></div>
+      <div><b>${rs.length?fmt(Math.max(...rs),0)+' dBm':'--'}</b><span>Best signal</span></div><div><b>${rs.length?fmt(Math.min(...rs),0)+' dBm':'--'}</b><span>Weakest signal</span></div></div>`;
+    foot.innerHTML=`Margin to the SF10 limit of −132 dBm: <b>${rs.length?fmt(Math.min(...rs)+132,0)+' dB':'--'}</b>`; }
+  if(p.kind==='annos'){ body.innerHTML='<div class="mc-list">'+(S.annos.length?S.annos.slice().sort((a,b)=>b.t-a.t).map(a=>`<div class="it"><span class="t">${gstDate(new Date(a.t*1000))} ${hm(new Date(a.t*1000))}</span><span style="color:${a.color}">${esc(a.text)}</span><button class="mc-x" data-id="${a.id}" title="Delete marker">✕</button></div>`).join(''):'<div class="empty">No markers yet. Ctrl or ⌘ + click a chart, or use the buttons below.</div>')+'</div>';
+    body.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>{ S.annos=S.annos.filter(a=>a.id!==+b.dataset.id); saveAll(); render(true); });
+    foot.innerHTML='<a href="#" data-q="Payload deployed">＋ Payload deployed</a> &nbsp; <a href="#" data-q="Fault injected">＋ Fault injected</a> &nbsp; <a href="#" data-q="">＋ Custom</a>';
+    foot.querySelectorAll('a').forEach(a=>a.onclick=e=>{ e.preventDefault(); if(a.dataset.q) addAnno(latestT(),a.dataset.q); else { const r=a.getBoundingClientRect(); annoPop(r.left,r.top,latestT()); } }); } }
+const latestT=()=>S.cursor??(G.hk.at(-1)?.t_unix??nowS());
+
+/* ---------- annotations ---------- */
+function addAnno(t,text,color){ S.annos.push({id:Date.now()+Math.floor(Math.random()*1000),t,text,color:color||(/fault/i.test(text)?'#F2867D':/deploy/i.test(text)?'#8FCB8C':'#B98AF0')}); saveAll(); render(true); }
+function annoPop(x,y,t){ closePop(); const d=document.createElement('div'); d.className='mc-pop'; d.setAttribute('role','dialog');
+  d.style.left=Math.max(8,Math.min(x,innerWidth-300))+'px'; d.style.top=Math.max(8,Math.min(y+10,innerHeight-200))+'px';
+  d.innerHTML=`<b style="font-size:14px">Mark an event</b><div class="muted">${gstDate(new Date(t*1000))}, ${gst(new Date(t*1000))} GST</div>
+    <div class="pre"><button>Payload deployed</button><button>Fault injected</button><button>Antenna fitted</button><button>Safe mode test</button><button>Sun test start</button></div>
+    <input type="text" maxlength="40" placeholder="Event name" aria-label="Event name"><div class="act"><button class="btn" data-x>Cancel</button><button class="btn" data-ok style="border-color:var(--sun)">Add marker</button></div>`;
+  document.body.appendChild(d); const inp=d.querySelector('input'); inp.focus();
+  d.querySelectorAll('.pre button').forEach(b=>b.onclick=()=>{ inp.value=b.textContent; inp.focus(); });
+  d.querySelector('[data-x]').onclick=closePop; const ok=()=>{ const v=inp.value.trim(); if(v) addAnno(t,v); closePop(); };
+  d.querySelector('[data-ok]').onclick=ok; inp.onkeydown=e=>{ if(e.key==='Enter') ok(); if(e.key==='Escape') closePop(); }; }
+function closePop(){ document.querySelectorAll('.mc-pop,.mc-dd').forEach(e=>e.remove()); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.mc-pop,.mc-dd,.mc-menu')) document.querySelectorAll('.mc-dd').forEach(x=>x.remove()); });
+
+/* ---------- panel menu: data links + library ---------- */
+function menu(btn,p){ closePop(); const d=document.createElement('div'); d.className='mc-dd'; d.setAttribute('role','menu');
+  const tab=p.tab||(p.metrics?M[p.metrics[0]].tab:'satellite');
+  d.innerHTML=`<h4>Data links</h4>${LINKS.report?`<a href="${LINKS.report}" target="_blank" rel="noopener">Technical report ↗</a>`:''}<a href="${LINKS.video}" target="_blank" rel="noopener">Demo video ↗</a>
+    <button data-go="${tab}">Open the ${TAB_NAMES[tab]} page</button>${p.metrics?`<button data-ex="${p.metrics[0]}">Open in sensor explorer</button>`:''}
+    <h4>Panel</h4>${p.metrics||p.kind==='explore'?'<button data-lib>Save to library</button>':''}<button data-an>Mark an event now</button>`;
+  document.body.appendChild(d); const r=btn.getBoundingClientRect(); d.style.left=Math.max(8,Math.min(r.right-230,innerWidth-240))+scrollX+'px'; d.style.top=r.bottom+6+scrollY+'px';
+  d.querySelector('[data-go]').onclick=()=>{ closePop(); showTab(tab,true); };
+  const ex=d.querySelector('[data-ex]'); if(ex) ex.onclick=()=>{ closePop(); S.sensor=ex.dataset.ex; $('mcVarSensor').value=S.sensor; saveAll(); render(true); document.querySelector('[data-pid="explore"]').scrollIntoView({behavior:'smooth',block:'center'}); };
+  const lb=d.querySelector('[data-lib]'); if(lb) lb.onclick=()=>{ closePop(); const metric=p.kind==='explore'?S.sensor:p.metrics[0]; const id=Date.now(); S.lib.push({id,title:p.kind==='explore'?M[metric].label:p.title,metric}); S.place.telemetry.push(id); saveAll(); renderLib(); toast('Saved to library',`"${p.kind==='explore'?M[metric].label:p.title}" can now be reused on other pages`,true); };
+  d.querySelector('[data-an]').onclick=()=>{ closePop(); const r2=btn.getBoundingClientRect(); annoPop(r2.left-200,r2.bottom,latestT()); }; }
+
+/* ---------- library panels (one definition, used on several pages) ---------- */
+function libCard(def){ return `<div class="panel mc-libp" data-lib="${def.id}"><div class="mc-ph"><h3>${esc(def.title)}</h3><span class="mc-libtag">library</span></div>
+  <div class="mc-big" data-v>--</div><canvas data-spark width="300" height="46"></canvas></div>`; }
+function renderLib(){ const w=window_();
+  [['mcLibRow','telemetry'],['mcSatLib','satellite']].forEach(([hid,page])=>{ const host=$(hid); if(!host) return;
+    const ids=S.place[page]||[]; const defs=ids.map(id=>S.lib.find(l=>l.id===id)).filter(Boolean);
+    if(host.dataset.sig!==defs.map(d=>d.id+d.title).join('|')){ host.innerHTML=defs.length?defs.map(libCard).join(''):(page==='telemetry'?'<div class="muted" style="padding:6px 2px">Use “⋯ → Save to library” on any chart. Library panels can then be added to other pages from the Library button.</div>':''); host.dataset.sig=defs.map(d=>d.id+d.title).join('|'); }
+    if(page==='satellite'&&$('mcSatLibBox')) $('mcSatLibBox').hidden=!defs.length;
+    host.querySelectorAll('[data-lib]').forEach(card=>{ const def=S.lib.find(l=>l.id===+card.dataset.lib); if(!def) return; const l=latest(def.metric);
+      card.querySelector('[data-v]').innerHTML=l?`${fmt(l.y,M[def.metric].dp)}<small>${M[def.metric].unit}</small>`:'--';
+      spark(card.querySelector('[data-spark]'),series(def.metric,w)); }); });
+  const row=document.querySelector('.mc-row[data-row="lib"] .mc-rcount'); if(row) row.textContent=(S.place.telemetry||[]).length+' panels'; }
+function spark(cv,pts){ const g=cv.getContext('2d'), W=cv.width, H=cv.height; g.clearRect(0,0,W,H); if(pts.length<2) return;
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y), x0=Math.min(...xs), x1=Math.max(...xs), y0=Math.min(...ys), y1=Math.max(...ys);
+  g.strokeStyle='#F2B33D'; g.lineWidth=1.6; g.beginPath(); pts.forEach((p,i)=>{ const x=(p.x-x0)/(x1-x0||1)*W, y=H-3-(p.y-y0)/(y1-y0||1)*(H-6); i?g.lineTo(x,y):g.moveTo(x,y); }); g.stroke(); }
+function libSheet(){ sheet('Library panels',()=>{ const pages=[['telemetry','Telemetry'],['satellite','Satellite']];
+  return S.lib.length?`<p class="muted">Each library panel is defined once. Renaming it here updates it on every page that uses it.</p><div class="mc-lib">`+S.lib.map(d=>`<div class="it"><div><input value="${esc(d.title)}" data-ren="${d.id}" aria-label="Panel title"><div class="muted">${M[d.metric].label}</div></div>
+    <div class="btns">${pages.map(([k,n])=>{ const on=(S.place[k]||[]).includes(d.id); return `<button class="btn" data-tog="${d.id}" data-page="${k}" aria-pressed="${on}">${on?'✓ ':''}${n}</button>`; }).join('')}<button class="btn" data-del="${d.id}">Delete</button></div></div>`).join('')+'</div>'
+    :'<p class="muted">The library is empty. Open any chart menu (⋯) and choose “Save to library”.</p>'; },el=>{
+  el.querySelectorAll('[data-ren]').forEach(i=>i.oninput=()=>{ const d=S.lib.find(l=>l.id===+i.dataset.ren); d.title=i.value||'Untitled'; saveAll(); renderLib(); });
+  el.querySelectorAll('[data-tog]').forEach(b=>b.onclick=()=>{ const id=+b.dataset.tog, pg=b.dataset.page, arr=(S.place[pg]??=[]); const k=arr.indexOf(id); if(k>=0) arr.splice(k,1); else arr.push(id); saveAll(); renderLib(); libSheet(); });
+  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ const id=+b.dataset.del; S.lib=S.lib.filter(l=>l.id!==id); Object.values(S.place).forEach(a=>{ const k=a.indexOf(id); if(k>=0) a.splice(k,1); }); saveAll(); renderLib(); libSheet(); }); }); }
+
+/* ---------- alert rules sheet ---------- */
+function rulesSheet(){ sheet('Alert rules',()=>`<p class="muted">Rules are checked against the latest reading on every refresh. A firing rule shows a notice, marks its panel and draws its limit on the chart.</p>
+  <table class="mc-t"><thead><tr><th>Status</th><th>Reading</th><th>Condition</th><th>Severity</th><th></th></tr></thead><tbody>`+
+  S.rules.map(r=>`<tr><td><span class="mc-st ${!r.on?'off':S.fired[r.id]?'fire':'ok'}">${!r.on?'Paused':S.fired[r.id]?'Firing':'OK'}</span></td><td>${M[r.metric].label}</td><td>${opTxt(r.op)} ${fmt(r.val,M[r.metric].dp)} ${M[r.metric].unit}</td><td>${r.sev}</td>
+    <td style="white-space:nowrap"><button class="mc-x" data-pause="${r.id}" title="${r.on?'Pause':'Resume'}">${r.on?'⏸':'▶'}</button><button class="mc-x" data-del="${r.id}" title="Delete rule">✕</button></td></tr>`).join('')+
+  `</tbody></table><div class="mc-form"><b style="font-size:13px">New rule</b><select data-f="metric">${Object.entries(M).map(([k,m])=>`<option value="${k}">${m.label}</option>`).join('')}</select>
+   <select data-f="op"><option value="<">below</option><option value=">">above</option><option value="|>|">above ± (either sign)</option></select><input data-f="val" type="number" step="any" value="0" aria-label="Limit">
+   <select data-f="sev"><option>Warning</option><option>Critical</option></select><button class="btn" data-add style="border-color:var(--sun)">Add rule</button></div>`,el=>{
+  el.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ S.rules=S.rules.filter(r=>r.id!==+b.dataset.del); delete S.fired[+b.dataset.del]; saveAll(); rulesSheet(); render(true); });
+  el.querySelectorAll('[data-pause]').forEach(b=>b.onclick=()=>{ const r=S.rules.find(x=>x.id===+b.dataset.pause); r.on=!r.on; saveAll(); evalRules(); rulesSheet(); render(true); });
+  el.querySelector('[data-add]').onclick=()=>{ const f=k=>el.querySelector(`[data-f="${k}"]`).value; const v=parseFloat(f('val')); if(!isFinite(v)) return; S.rules.push({id:Date.now(),metric:f('metric'),op:f('op'),val:v,sev:f('sev'),on:true}); saveAll(); evalRules(); rulesSheet(); render(true); }; }); }
+
+/* ---------- playlists ---------- */
+function plSheet(){ sheet('Playlist',()=>`<p class="muted">Rotates through the pages you pick, for a screen at the venue. Kiosk mode hides the top bar until you move the mouse to it.</p>
+  <div class="mc-pl"><div class="tabs">${Object.entries(TAB_NAMES).map(([k,n])=>`<label><input type="checkbox" value="${k}" ${S.pl.tabs.includes(k)?'checked':''}>${n}</label>`).join('')}</div>
+  <div class="mc-form"><label>Every <select data-secs>${[10,15,20,30,45,60].map(s=>`<option value="${s}" ${S.pl.secs===s?'selected':''}>${s} s</option>`).join('')}</select></label>
+  <label><input type="checkbox" data-kiosk ${S.pl.kiosk?'checked':''}> Kiosk mode (full screen)</label><button class="btn" data-start style="border-color:var(--sun)">Start playlist</button></div></div>`,el=>{
+  el.querySelector('[data-start]').onclick=()=>{ S.pl.tabs=[...el.querySelectorAll('.tabs input:checked')].map(i=>i.value); S.pl.secs=+el.querySelector('[data-secs]').value; S.pl.kiosk=el.querySelector('[data-kiosk]').checked; saveAll();
+    if(!S.pl.tabs.length) return; closeSheet(); startPlaylist(); }; }); }
+function startPlaylist(){ stopPlaylist(true); S.play={i:-1,left:0,paused:false}; if(S.pl.kiosk){ document.body.classList.add('mc-kiosk'); try{ document.documentElement.requestFullscreen?.(); }catch(e){} }
+  const chip=document.createElement('div'); chip.className='mc-chip'; chip.id='mcChip'; chip.innerHTML='<span id="mcChipTxt"></span><button data-p>Pause</button><button data-n>Next</button><button data-s>Stop</button>'; document.body.appendChild(chip);
+  chip.querySelector('[data-p]').onclick=e=>{ S.play.paused=!S.play.paused; e.currentTarget.textContent=S.play.paused?'Resume':'Pause'; plTick(); };
+  chip.querySelector('[data-n]').onclick=()=>{ S.play.left=0; plTick(true); }; chip.querySelector('[data-s]').onclick=()=>stopPlaylist();
+  S.play.timer=setInterval(plTick,1000); plTick(true); }
+function plTick(force){ const P=S.play; if(!P) return; if(!P.paused) P.left--; if(force===true||P.left<=0){ P.i=(P.i+1)%S.pl.tabs.length; P.left=S.pl.secs; showTab(S.pl.tabs[P.i],true); }
+  const t=$('mcChipTxt'); if(t) t.innerHTML=`▶ Playlist · <b>${TAB_NAMES[S.pl.tabs[P.i]]}</b> · ${P.paused?'paused':'next in '+P.left+' s'}`; }
+function stopPlaylist(silent){ if(S.play){ clearInterval(S.play.timer); S.play=null; } $('mcChip')?.remove(); document.body.classList.remove('mc-kiosk'); if(document.fullscreenElement&&!silent) try{ document.exitFullscreen(); }catch(e){} }
+
+/* ---------- sheet helper ---------- */
+function sheet(title,html,bind){ closeSheet(); const s=document.createElement('div'); s.className='mc-sheet'; s.id='mcSheet';
+  s.innerHTML=`<div class="panel" role="dialog" aria-label="${esc(title)}"><button class="btn x" data-close>Close</button><h3 style="font-size:19px;margin-bottom:6px">${esc(title)}</h3><div data-body>${html()}</div></div>`;
+  document.body.appendChild(s); s.onclick=e=>{ if(e.target===s) closeSheet(); }; s.querySelector('[data-close]').onclick=closeSheet; bind&&bind(s.querySelector('[data-body]'));
+  document.addEventListener('keydown',escClose); }
+function escClose(e){ if(e.key==='Escape'){ closeSheet(); closePop(); } }
+function closeSheet(){ $('mcSheet')?.remove(); document.removeEventListener('keydown',escClose); }
+
+/* ---------- replay ---------- */
+function toggleReplay(){ const b=$('mcReplay');
+  if(S.replay){ cancelAnimationFrame(S.replay.raf); S.replay=null; S.cursor=null; b.setAttribute('aria-pressed','false'); b.textContent='Replay range'; render(true); return; }
+  const w=window_(); S.replay={start:w.start,end:w.end,t0:performance.now(),dur:20000}; b.setAttribute('aria-pressed','true'); b.textContent='Stop replay';
+  const step=()=>{ const R=S.replay; if(!R) return; const k=Math.min(1,(performance.now()-R.t0)/R.dur); S.cursor=R.start+(R.end-R.start)*k; render(true);
+    if(k<1) R.raf=requestAnimationFrame(()=>setTimeout(step,120)); else { $('mcLiveTxt').textContent='Replay finished'; } };
+  step(); }
+
+/* ---------- render ---------- */
+let lastRender=0;
+function render(force){ const vis=!$('telemetry').hidden; const t=performance.now();
+  const firing=S.replay?Object.keys(S.fired).length:evalRules();
+  if(!vis&&!force){ if(!$('satellite').hidden) renderLib(); return; }
+  if(!vis) return; if(!force&&t-lastRender<400) return; lastRender=t;
+  const w=window_();
+  document.querySelectorAll('.mc-row').forEach(d=>{ const r=ROWS.find(x=>x.id===d.dataset.row); const fl=d.querySelector('.mc-rflag');
+    const n=S.rules.filter(x=>S.fired[x.id]&&M[x.metric].row===r.id).length; fl.hidden=!n; fl.textContent=n?`${n} firing`:'';
+    if(!d.open) return; r.panels.forEach(p=>{ if(p.kind==='chart'||p.kind==='explore') renderChart(p,w); else if(p.kind==='scenes') renderScenes(p,w); else renderBody(p,w); }); });
+  renderLib();
+  const live=$('mcLive'); live.classList.toggle('on',S.refresh>0&&!S.replay); $('mcLiveTxt').textContent=S.replay?`Replaying ${gstDate(new Date(S.cursor*1000))} ${hm(new Date(S.cursor*1000))}`:S.refresh?`Live, every ${S.refresh} s`:'Paused';
+  if(firing===0) {} }
+function setRefresh(){ clearInterval(S.timer); if(S.refresh>0) S.timer=setInterval(()=>{ if(!S.replay) render(false); },S.refresh*1000); else S.timer=setInterval(()=>evalRules(),15000); }
+
+/* ---------- init ---------- */
+function init(){ build();
+  $('mcRange').onchange=e=>{ S.range=+e.target.value; saveAll(); render(true); };
+  $('mcRefresh').onchange=e=>{ S.refresh=+e.target.value; saveAll(); setRefresh(); render(true); };
+  $('mcVarSensor').onchange=e=>{ S.sensor=e.target.value; saveAll(); render(true); };
+  $('mcVarCompare').onchange=e=>{ S.compare=e.target.value; saveAll(); render(true); };
+  $('mcVarDevice').onchange=e=>{ setSource(e.target.value); S.fired={}; S.history=[]; render(true); };
+  $('mcReplay').onclick=toggleReplay; $('mcPlBtn').onclick=plSheet; $('mcLibBtn').onclick=libSheet; $('mcRulesBtn').onclick=rulesSheet;
+  const q=new URLSearchParams(location.search); if(M[q.get('var-sensor')]) S.sensor=q.get('var-sensor'); if(q.get('refresh')) S.refresh=+q.get('refresh')||0;
+  if(q.get('playlist')==='1') setTimeout(startPlaylist,800);
+  setRefresh(); setTimeout(()=>render(true),300); }
+return {init,render,M,S,startPlaylist,stopPlaylist};
+})();
+TABS.push('telemetry');
+MC.init();
+{ const ob=new MutationObserver(()=>{ if(!$('telemetry').hidden) requestAnimationFrame(()=>MC.render(true)); }); ob.observe($('telemetry'),{attributes:true,attributeFilter:['hidden']}); }
+
 showTab(location.hash.slice(1));
 requestAnimationFrame(frame);
 </script>
