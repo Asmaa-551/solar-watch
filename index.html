@@ -1147,7 +1147,7 @@ body.mc-kiosk .nav:hover{opacity:1;pointer-events:auto}
         <div class="node"><b>2 · Camera + AI</b><span>ESP32-CAM images the farm and finds the panels on board</span></div><div class="arr">›</div>
         <div class="node"><b>3 · Flight computer</b><span>ESP32 DevKit runs the orbit schedule and packs results into packets</span></div><div class="arr">›</div>
         <div class="node"><b>4 · Radio downlink</b><span>LoRa Ra-02 at 433 MHz, only during ground station passes</span></div><div class="arr">›</div>
-        <div class="node"><b>5 · Ground station</b><span>ESP32 + LoRa receiver, forwards packets over USB or 2.4 GHz Wi-Fi</span></div><div class="arr">›</div>
+        <div class="node"><b>5 · Ground station</b><span>ESP32 + LoRa receiver, forwards packets to the dashboard</span></div><div class="arr">›</div>
         <div class="node"><b>6 · Dashboard</b><span>Decodes packets into maps, health, alerts and cleaning jobs</span></div>
       </div>
     </div>
@@ -1170,7 +1170,7 @@ body.mc-kiosk .nav:hover{opacity:1;pointer-events:auto}
       <div class="mc-bar" aria-label="Time and refresh controls">
         <span class="mc-live" id="mcLive"><i></i><span id="mcLiveTxt">Live</span></span>
         <label>Range <select id="mcRange">
-          <option value="900">Last 15 min</option><option value="3600">Last 1 h</option><option value="21600" selected>Last 6 h</option><option value="86400">Last 24 h</option><option value="0">All received</option>
+          <option value="900">Last 15 min</option><option value="3600">Last 1 h</option><option value="21600">Last 6 h</option><option value="86400" selected>Last 24 h</option><option value="0">All received</option>
         </select></label>
         <label>Refresh <select id="mcRefresh">
           <option value="0">Off</option><option value="5" selected>5 s</option><option value="10">10 s</option><option value="30">30 s</option><option value="60">1 min</option>
@@ -1183,7 +1183,7 @@ body.mc-kiosk .nav:hover{opacity:1;pointer-events:auto}
     </div>
     <div class="mc-vars" aria-label="Dashboard variables">
       <b>Variables</b>
-      <label>Device <select id="mcVarDevice"><option value="sim">Solar Watch SW-1 (Gazebo pass)</option><option value="proto">Bench prototype (USB ground station)</option></select></label>
+      <label>Device <select id="mcVarDevice"><option value="sim">Solar Watch prototype</option></select></label>
       <label>Sensor <select id="mcVarSensor"></select></label>
       <label>Compare with <select id="mcVarCompare"></select></label>
       <span class="mc-hint">Ctrl or ⌘ + click any chart to mark an event</span>
@@ -1776,9 +1776,8 @@ const Sim = (()=>{
         solar_ma:solar_mw>0?Math.round(solar_mw/5.5):0, temp_cc:Math.round(sat.temp*100), light,
         roll:Math.round((sat.roll+gauss(R)*0.3)*100), pitch:Math.round(gauss(R)*30), yaw:Math.round(gauss(R)*40), wheel:sat.wheel,
         flags:1|2|4|8|16|(ecl?32:0)|(sat.soc<0.2?64:0)};
-      sat.queue.push({pri:2, t, build:(seq)=>encHK(seq,t,hk), hk:true});
-      // keep onboard HK buffer bounded (oldest dropped first)
-      const hks=sat.queue.filter(q=>q.hk); if(hks.length>240){ const drop=hks[0]; sat.queue.splice(sat.queue.indexOf(drop),1); }
+      // housekeeping streams continuously to the ground station
+      { const rssi=Math.round(-118+gauss(R)*3); onRx({bytes:encHK(sat.seq++,t,hk), rssi, snr:Math.round((rssi+117+gauss(R))*10)/10, gs:'Ground station', rx_unix:t, source:'sim'}); }
     }
 
     // downlink: alerts first, then scenes, then housekeeping; one packet per 3 s
@@ -1863,7 +1862,7 @@ function onRx(rx){
   const sname=siteById(p.site_id)?.short??'new site';
   G.log.unshift({t:rx.rx_unix, txt:p.kind==='hk'?`Housekeeping, battery ${p.bat_soc}%`:p.kind==='scene'?`Image result, ${sname}`:`${p.alerts.length} alerts, ${sname}`, bytes:p.bytes, rssi:rx.rssi});
   if(G.log.length>80) G.log.length=80;
-  if(p.kind==='hk'){ G.hk.push(p); if(G.hk.length>900) G.hk.shift(); }
+  if(p.kind==='hk'){ G.hk.push(p); if(G.hk.length>1600) G.hk.shift(); }
   if(p.kind==='scene'){ (G.scenes[p.site_id]??=[]).push(p); G.rawKb+=p.raw_kb;
     G.feed.unshift({t:p.t_unix,title:`Image processed, ${sname}`,text:`${fmt(p.area_m2/1e6,2)} km² of panels found, ${p.cloud_pct}% cloud`,mask:p.mask,site:p.site_id}); }
   if(p.kind==='alert'){ const m=(G.alerts[p.site_id]??={}), flagged=new Set(p.alerts.map(a=>a.cell+':'+a.kind));
@@ -2317,7 +2316,7 @@ const ROWS = [
   {id:'lib',title:'My library panels',panels:[]}
 ];
 const S = {
-  range: store.get('range',21600), refresh: store.get('refresh',5),
+  range: store.get('range',86400), refresh: store.get('refresh',5),
   sensor: store.get('sensor','bat_soc'), compare: store.get('compare',''),
   open: store.get('open',{}), annos: store.get('annos',[]),
   rules: store.get('rules',null), lib: store.get('lib',[]), place: store.get('place',{telemetry:[],satellite:[]}),
